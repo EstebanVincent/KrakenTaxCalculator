@@ -25,7 +25,7 @@ Create a **read-only** API key at https://www.kraken.com/u/security/api with per
 
 ## Hosted version
 
-A public instance is deployed on **Streamlit Community Cloud** and redeploys automatically on every push to `main`.
+A public instance is live at **[krakentaxcalculator.streamlit.app](https://krakentaxcalculator.streamlit.app)** and redeploys automatically on every push to `main`.
 
 Your API keys are never written to disk — they live in session memory only and are gone when you close the tab.
 
