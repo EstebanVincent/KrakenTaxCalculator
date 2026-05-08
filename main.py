@@ -22,47 +22,101 @@ KRAKEN_API_BASE = "https://api.kraken.com"
 API_VERSION = "0"
 
 ASSET_MAP: dict[str, str] = {
-    "XXBT": "BTC", "XBT": "BTC",
-    "XETH": "ETH", "ETH": "ETH",
-    "XLTC": "LTC", "LTC": "LTC",
-    "XXRP": "XRP", "XRP": "XRP",
-    "XXLM": "XLM", "XLM": "XLM",
-    "XDOT": "DOT", "DOT": "DOT",
-    "ADA": "ADA", "XADA": "ADA",
-    "SOL": "SOL", "MATIC": "MATIC", "POL": "POL",
-    "LINK": "LINK", "ATOM": "ATOM", "AVAX": "AVAX",
-    "ALGO": "ALGO", "MANA": "MANA", "SAND": "SAND",
-    "UNI": "UNI", "AAVE": "AAVE", "CRV": "CRV",
-    "DOGE": "DOGE", "TRX": "TRX", "NEAR": "NEAR",
-    "GRT": "GRT", "ENJ": "ENJ", "COMP": "COMP",
-    "MKR": "MKR", "SNX": "SNX", "YFI": "YFI",
-    "SUSHI": "SUSHI", "BAT": "BAT",
-    "ZEC": "ZEC", "XZEC": "ZEC",
-    "XMR": "XMR", "XXMR": "XMR",
-    "DASH": "DASH", "XDASH": "DASH",
-    "EOS": "EOS", "XEOS": "EOS",
-    "SHIB": "SHIB", "FTM": "FTM", "ICP": "ICP",
-    "ZEUR": "EUR", "EUR": "EUR",
-    "ZUSD": "USD", "USD": "USD",
-    "ZGBP": "GBP", "GBP": "GBP",
-    "USDT": "USDT", "USDC": "USDC", "DAI": "DAI",
-    "ETH2": "ETH2", "ETH2.S": "ETH2",
+    "XXBT": "BTC",
+    "XBT": "BTC",
+    "XETH": "ETH",
+    "ETH": "ETH",
+    "XLTC": "LTC",
+    "LTC": "LTC",
+    "XXRP": "XRP",
+    "XRP": "XRP",
+    "XXLM": "XLM",
+    "XLM": "XLM",
+    "XDOT": "DOT",
+    "DOT": "DOT",
+    "ADA": "ADA",
+    "XADA": "ADA",
+    "SOL": "SOL",
+    "MATIC": "MATIC",
+    "POL": "POL",
+    "LINK": "LINK",
+    "ATOM": "ATOM",
+    "AVAX": "AVAX",
+    "ALGO": "ALGO",
+    "MANA": "MANA",
+    "SAND": "SAND",
+    "UNI": "UNI",
+    "AAVE": "AAVE",
+    "CRV": "CRV",
+    "DOGE": "DOGE",
+    "TRX": "TRX",
+    "NEAR": "NEAR",
+    "GRT": "GRT",
+    "ENJ": "ENJ",
+    "COMP": "COMP",
+    "MKR": "MKR",
+    "SNX": "SNX",
+    "YFI": "YFI",
+    "SUSHI": "SUSHI",
+    "BAT": "BAT",
+    "ZEC": "ZEC",
+    "XZEC": "ZEC",
+    "XMR": "XMR",
+    "XXMR": "XMR",
+    "DASH": "DASH",
+    "XDASH": "DASH",
+    "EOS": "EOS",
+    "XEOS": "EOS",
+    "SHIB": "SHIB",
+    "FTM": "FTM",
+    "ICP": "ICP",
+    "ZEUR": "EUR",
+    "EUR": "EUR",
+    "ZUSD": "USD",
+    "USD": "USD",
+    "ZGBP": "GBP",
+    "GBP": "GBP",
+    "USDT": "USDT",
+    "USDC": "USDC",
+    "DAI": "DAI",
+    "ETH2": "ETH2",
+    "ETH2.S": "ETH2",
 }
 
 FIAT_AND_STABLECOINS = {"EUR", "USD", "GBP", "USDT", "USDC", "DAI", "BUSD", "TUSD"}
 
 EUR_PAIRS: dict[str, str] = {
-    "BTC": "XXBTZEUR", "ETH": "XETHZEUR", "LTC": "XLTCZEUR",
-    "XRP": "XXRPZEUR", "XLM": "XXLMZEUR", "DOT": "DOTZEUR",
-    "ADA": "ADAEUR", "SOL": "SOLEUR", "MATIC": "MATICEUR",
-    "LINK": "LINKEUR", "ATOM": "ATOMEUR", "AVAX": "AVAXEUR",
-    "ALGO": "ALGOEUR", "MANA": "MANAEUR", "SAND": "SANDEUR",
-    "UNI": "UNIEUR", "AAVE": "AAVEEUR", "CRV": "CRVEUR",
-    "DOGE": "XDOGEZEUR", "TRX": "TRXEUR", "NEAR": "NEAREUR",
-    "GRT": "GRTEUR", "ENJ": "ENJEUR", "COMP": "COMPEUR",
-    "MKR": "MKREUR", "SNX": "SNXEUR", "YFI": "YFIEUR",
-    "SUSHI": "SUSHIEUR", "BAT": "BATEUR",
-    "ZEC": "XZECZEUR", "XMR": "XXMRZEUR",
+    "BTC": "XXBTZEUR",
+    "ETH": "XETHZEUR",
+    "LTC": "XLTCZEUR",
+    "XRP": "XXRPZEUR",
+    "XLM": "XXLMZEUR",
+    "DOT": "DOTZEUR",
+    "ADA": "ADAEUR",
+    "SOL": "SOLEUR",
+    "MATIC": "MATICEUR",
+    "LINK": "LINKEUR",
+    "ATOM": "ATOMEUR",
+    "AVAX": "AVAXEUR",
+    "ALGO": "ALGOEUR",
+    "MANA": "MANAEUR",
+    "SAND": "SANDEUR",
+    "UNI": "UNIEUR",
+    "AAVE": "AAVEEUR",
+    "CRV": "CRVEUR",
+    "DOGE": "XDOGEZEUR",
+    "TRX": "TRXEUR",
+    "NEAR": "NEAREUR",
+    "GRT": "GRTEUR",
+    "ENJ": "ENJEUR",
+    "COMP": "COMPEUR",
+    "MKR": "MKREUR",
+    "SNX": "SNXEUR",
+    "YFI": "YFIEUR",
+    "SUSHI": "SUSHIEUR",
+    "BAT": "BATEUR",
+    "ZEC": "XZECZEUR",
+    "XMR": "XXMRZEUR",
     "ETH2": "ETH2.SEUR",
 }
 
@@ -338,24 +392,26 @@ def calc_form_2086(trades: pd.DataFrame, ledgers: pd.DataFrame, year: int) -> pd
             pmta = max(0.0, pmta - recovered)
 
             if ts.year == year:
-                year_rows.append({
-                    "Date (L211)": ts.strftime("%d/%m/%Y"),
-                    "Valeur portefeuille (L212)": l212,
-                    "Prix de cession (L213)": l213,
-                    "Frais cession (L214)": l214,
-                    "Net frais (L215)": l215,
-                    "Soulte (L216)": l216,
-                    "Net soultes (L217)": l217,
-                    "Net frais+soultes (L218)": l218,
-                    "Prix total acq. PMTA (L220)": l220,
-                    "Capital récupéré préc. (L221)": l221,
-                    "Soultes échanges ant. (L222)": l222,
-                    "Acq. net (L223)": l223,
-                    "Plus/Moins-value": pv,
-                    "Pair": t["pair"],
-                    "Volume vendu": round(float(t["vol"]), 8),
-                    "txid": t["txid"],
-                })
+                year_rows.append(
+                    {
+                        "Date (L211)": ts.strftime("%d/%m/%Y"),
+                        "Valeur portefeuille (L212)": l212,
+                        "Prix de cession (L213)": l213,
+                        "Frais cession (L214)": l214,
+                        "Net frais (L215)": l215,
+                        "Soulte (L216)": l216,
+                        "Net soultes (L217)": l217,
+                        "Net frais+soultes (L218)": l218,
+                        "Prix total acq. PMTA (L220)": l220,
+                        "Capital récupéré préc. (L221)": l221,
+                        "Soultes échanges ant. (L222)": l222,
+                        "Acq. net (L223)": l223,
+                        "Plus/Moins-value": pv,
+                        "Pair": t["pair"],
+                        "Volume vendu": round(float(t["vol"]), 8),
+                        "txid": t["txid"],
+                    }
+                )
 
     df = pd.DataFrame(year_rows)
     if not df.empty:
@@ -385,14 +441,16 @@ def calc_staking_income(ledgers: pd.DataFrame, year: int) -> pd.DataFrame:
             continue
         price = get_eur_price(asset, row["time"])
         eur_value = round(amount * price, 2) if price else None
-        rows.append({
-            "Date": row["time"].strftime("%d/%m/%Y"),
-            "Asset": asset,
-            "Montant reçu": round(amount, 8),
-            "Prix EUR (jour)": price,
-            "Valeur EUR": eur_value,
-            "Type": row["type"],
-        })
+        rows.append(
+            {
+                "Date": row["time"].strftime("%d/%m/%Y"),
+                "Asset": asset,
+                "Montant reçu": round(amount, 8),
+                "Prix EUR (jour)": price,
+                "Valeur EUR": eur_value,
+                "Type": row["type"],
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -422,12 +480,15 @@ def main() -> None:
         current_year = datetime.now(timezone.utc).year
         tax_year = st.selectbox(
             "Année fiscale",
-            options=list(range(current_year - 1, 2017, -1)),
+            options=list(range(current_year - 1, current_year - 5, -1)),
             index=0,
         )
 
-        force_refresh = st.checkbox("🔁 Forcer le rechargement depuis Kraken", value=False,
-                                      help="Désactiver pour utiliser le cache local (data/trades.csv)")
+        force_refresh = st.checkbox(
+            "🔁 Forcer le rechargement depuis Kraken",
+            value=False,
+            help="Désactiver pour utiliser le cache local (data/trades.csv)",
+        )
         fetch_btn = st.button("🔄 Charger les données", type="primary", use_container_width=True)
 
         # Show cache status
@@ -492,7 +553,9 @@ def main() -> None:
             if not ledgers_df.empty:
                 st.subheader("Ledger")
                 year_ledger = ledgers_df[ledgers_df["time"].dt.year == tax_year]
-                st.dataframe(year_ledger[["time", "type", "asset", "amount", "fee", "balance"]], use_container_width=True)
+                st.dataframe(
+                    year_ledger[["time", "type", "asset", "amount", "fee", "balance"]], use_container_width=True
+                )
 
         # Form 2086 ------------------------------------------------------------
         with tab_2086:
@@ -509,9 +572,13 @@ def main() -> None:
                 c1, c2, c3 = st.columns(3)
                 c1.metric("Cessions", len(df_2086))
                 c2.metric("Plus/Moins-value globale (L224)", f"{total_pv:+,.2f} €")
-                c3.metric("Résultat", "Plus-value ✅" if total_pv > 0 else ("Moins-value 🔴" if total_pv < 0 else "Neutre"))
+                c3.metric(
+                    "Résultat", "Plus-value ✅" if total_pv > 0 else ("Moins-value 🔴" if total_pv < 0 else "Neutre")
+                )
 
-                fmt_cols = {c: "{:,.2f} €" for c in df_2086.columns if c not in ("Date (L211)", "Pair", "txid", "Volume vendu")}
+                fmt_cols = {
+                    c: "{:,.2f} €" for c in df_2086.columns if c not in ("Date (L211)", "Pair", "txid", "Volume vendu")
+                }
                 st.dataframe(
                     df_2086.drop(columns=["txid"]).style.format(fmt_cols),
                     use_container_width=True,
