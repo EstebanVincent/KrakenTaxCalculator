@@ -9,6 +9,8 @@ RUN uv sync --frozen
 # Set environment variables for production
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+# LOCAL = persist all data to mounted volume; CLOUD = only persist prices
+ENV APP_ENV=LOCAL
 
 RUN chmod u+x scripts/init.sh
 

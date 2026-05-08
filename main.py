@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
+import os
 import time
 import urllib.parse
 from datetime import datetime, timezone
@@ -21,6 +22,10 @@ import streamlit as st
 
 KRAKEN_API_BASE = "https://api.kraken.com"
 API_VERSION = "0"
+
+# LOCAL: persist trades+ledgers+prices to data/
+# CLOUD: only persist prices (user data stays in session memory)
+APP_ENV = os.getenv("APP_ENV", "LOCAL").upper()
 
 ASSET_MAP: dict[str, str] = {
     "XXBT": "BTC",
@@ -190,7 +195,7 @@ def _load_ledgers_csv() -> pd.DataFrame | None:
 
 @st.cache_data(ttl=300, show_spinner=False)
 def fetch_all_trades(key: str, secret: str, force_refresh: bool = False) -> pd.DataFrame:
-    if not force_refresh:
+    if APP_ENV == "LOCAL" and not force_refresh:
         cached = _load_trades_csv()
         if cached is not None:
             return cached
@@ -217,14 +222,15 @@ def fetch_all_trades(key: str, secret: str, force_refresh: bool = False) -> pd.D
     for col in ["price", "cost", "fee", "vol"]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
     df = df.sort_values("time").reset_index(drop=True)
-    DATA_DIR.mkdir(exist_ok=True)
-    df.to_csv(TRADES_CSV, index=False)
+    if APP_ENV == "LOCAL":
+        DATA_DIR.mkdir(exist_ok=True)
+        df.to_csv(TRADES_CSV, index=False)
     return df
 
 
 @st.cache_data(ttl=300, show_spinner=False)
 def fetch_all_ledgers(key: str, secret: str, force_refresh: bool = False) -> pd.DataFrame:
-    if not force_refresh:
+    if APP_ENV == "LOCAL" and not force_refresh:
         cached = _load_ledgers_csv()
         if cached is not None:
             return cached
@@ -251,8 +257,9 @@ def fetch_all_ledgers(key: str, secret: str, force_refresh: bool = False) -> pd.
     for col in ["amount", "fee", "balance"]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
     df = df.sort_values("time").reset_index(drop=True)
-    DATA_DIR.mkdir(exist_ok=True)
-    df.to_csv(LEDGERS_CSV, index=False)
+    if APP_ENV == "LOCAL":
+        DATA_DIR.mkdir(exist_ok=True)
+        df.to_csv(LEDGERS_CSV, index=False)
     return df
 
 
@@ -581,11 +588,14 @@ def main() -> None:
         fetch_btn = st.button("🔄 Charger les données", type="primary", use_container_width=True)
 
         # Show cache status
-        if TRADES_CSV.exists():
-            mtime = datetime.fromtimestamp(TRADES_CSV.stat().st_mtime)
-            st.caption(f"Cache local : {mtime.strftime('%d/%m/%Y %H:%M')}")
+        if APP_ENV == "LOCAL":
+            if TRADES_CSV.exists():
+                mtime = datetime.fromtimestamp(TRADES_CSV.stat().st_mtime)
+                st.caption(f"Cache local : {mtime.strftime('%d/%m/%Y %H:%M')}")
+            else:
+                st.caption("Pas de cache local.")
         else:
-            st.caption("Pas de cache local.")
+            st.caption("Mode cloud : données en mémoire de session uniquement.")
 
         st.divider()
         st.markdown(
@@ -594,8 +604,8 @@ def main() -> None:
             "[Kraken API Management](https://www.kraken.com/u/security/api)."
         )
 
-    # Auto-load from local CSV cache on startup — no API key needed
-    if "trades_df" not in st.session_state and TRADES_CSV.exists() and not fetch_btn:
+    # Auto-load from local CSV cache on startup — LOCAL mode only
+    if APP_ENV == "LOCAL" and "trades_df" not in st.session_state and TRADES_CSV.exists() and not fetch_btn:
         st.session_state["trades_df"] = _load_trades_csv()
         loaded_ledgers = _load_ledgers_csv()
         st.session_state["ledgers_df"] = loaded_ledgers if loaded_ledgers is not None else pd.DataFrame()
