@@ -169,6 +169,7 @@ def kraken_public(endpoint: str, params: dict | None = None) -> dict:
 DATA_DIR = Path("data")
 TRADES_CSV = DATA_DIR / "trades.csv"
 LEDGERS_CSV = DATA_DIR / "ledgers.csv"
+PRICES_CSV = DATA_DIR / "prices.csv"
 
 
 def _load_trades_csv() -> pd.DataFrame | None:
@@ -262,6 +263,25 @@ _price_cache: dict[tuple[str, str], float] = {}
 _price_failures: set[tuple[str, str]] = set()
 
 
+def _load_prices_csv() -> None:
+    """Populate _price_cache from data/prices.csv on startup."""
+    if not PRICES_CSV.exists():
+        return
+    df = pd.read_csv(PRICES_CSV)
+    for _, row in df.iterrows():
+        _price_cache[(row["pair"], row["date"])] = float(row["price"])
+
+
+def _save_prices_csv() -> None:
+    """Persist current _price_cache to data/prices.csv."""
+    DATA_DIR.mkdir(exist_ok=True)
+    rows = [{"pair": pair, "date": date, "price": price} for (pair, date), price in _price_cache.items()]
+    pd.DataFrame(rows).sort_values(["pair", "date"]).to_csv(PRICES_CSV, index=False)
+
+
+_load_prices_csv()  # load on module import
+
+
 @backoff.on_exception(
     backoff.expo,
     (httpx.HTTPStatusError, httpx.RequestError, ValueError),
@@ -302,6 +322,7 @@ def get_eur_price(asset: str, date: datetime) -> float | None:
         best = min(candles, key=lambda c: abs(c[0] - ts))
         price = float(best[4])
         _price_cache[cache_key] = price
+        _save_prices_csv()
         return price
     except Exception:
         _price_failures.add((ticker, day_key))
