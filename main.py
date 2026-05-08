@@ -284,7 +284,14 @@ def get_eur_price(asset: str, date: datetime) -> float | None:
 
 
 def normalize(asset: str) -> str:
-    return ASSET_MAP.get(asset, asset)
+    # Strip Kraken flexible/bonded staking suffixes (.F, .S, .M, .B, .P, .X)
+    # e.g. SOL.F → SOL, ETH2.S → ETH2
+    clean = asset
+    for suffix in (".F", ".S", ".M", ".B", ".P", ".X"):
+        if clean.endswith(suffix):
+            clean = clean[: -len(suffix)]
+            break
+    return ASSET_MAP.get(clean, ASSET_MAP.get(asset, asset))
 
 
 def is_fiat(asset: str) -> bool:
