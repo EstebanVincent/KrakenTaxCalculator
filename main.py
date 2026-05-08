@@ -10,6 +10,7 @@ import urllib.parse
 from datetime import datetime, timezone
 from pathlib import Path
 
+import backoff
 import httpx
 import pandas as pd
 import streamlit as st
@@ -206,7 +207,7 @@ def fetch_all_trades(key: str, secret: str, force_refresh: bool = False) -> pd.D
         if len(rows) >= result.get("count", 0):
             break
         offset += len(trades)
-        time.sleep(0.5)
+        time.sleep(1)
 
     if not rows:
         return pd.DataFrame()
@@ -240,7 +241,7 @@ def fetch_all_ledgers(key: str, secret: str, force_refresh: bool = False) -> pd.
         if len(rows) >= result.get("count", 0):
             break
         offset += len(ledgers)
-        time.sleep(0.5)
+        time.sleep(1)
 
     if not rows:
         return pd.DataFrame()
@@ -254,9 +255,28 @@ def fetch_all_ledgers(key: str, secret: str, force_refresh: bool = False) -> pd.
     return df
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+# Module-level price cache: only stores successful lookups so failed requests
+# are retried on the next call instead of being cached as None.
+_price_cache: dict[tuple[str, str], float] = {}
+# Tracks (asset, date) pairs where price lookup failed after all retries.
+_price_failures: set[tuple[str, str]] = set()
+
+
+@backoff.on_exception(
+    backoff.expo,
+    (httpx.HTTPStatusError, httpx.RequestError, ValueError),
+    max_tries=4,
+    base=2,
+    factor=1,
+)
+def _fetch_ohlc(pair: str, since: int) -> list:
+    """Fetch daily OHLC candles from Kraken public API with exponential backoff."""
+    result = kraken_public("OHLC", {"pair": pair, "interval": 1440, "since": since})
+    return list(result.values())[0]
+
+
 def get_eur_price(asset: str, date: datetime) -> float | None:
-    ticker = ASSET_MAP.get(asset, asset)
+    ticker = normalize(asset)
     if ticker == "EUR":
         return 1.0
     if ticker in FIAT_AND_STABLECOINS:
@@ -266,15 +286,25 @@ def get_eur_price(asset: str, date: datetime) -> float | None:
     pair = EUR_PAIRS.get(ticker)
     if not pair:
         return None
+
+    day_key = date.strftime("%Y-%m-%d")
+    cache_key = (pair, day_key)
+    if cache_key in _price_cache:
+        return _price_cache[cache_key]
+
     ts = int(date.timestamp())
     try:
-        result = kraken_public("OHLC", {"pair": pair, "interval": 1440, "since": ts - 86400 * 2})
-        candles = list(result.values())[0]
+        time.sleep(2)  # respect Kraken public rate limit (1 req/s)
+        candles = _fetch_ohlc(pair, ts - 86400 * 2)
         if not candles:
+            _price_failures.add((ticker, day_key))
             return None
         best = min(candles, key=lambda c: abs(c[0] - ts))
-        return float(best[4])
+        price = float(best[4])
+        _price_cache[cache_key] = price
+        return price
     except Exception:
+        _price_failures.add((ticker, day_key))
         return None
 
 
@@ -345,13 +375,22 @@ def calc_form_2086(trades: pd.DataFrame, ledgers: pd.DataFrame, year: int) -> pd
     if trades.empty or ledgers.empty:
         return pd.DataFrame()
 
+    _price_failures.clear()
     pmta = 0.0
     recovered_all_time = 0.0
     year_recovered = 0.0
     in_year = False
     year_rows: list[dict] = []
 
-    for _, t in trades.sort_values("time").iterrows():
+    all_trades = trades.sort_values("time").reset_index(drop=True)
+    progress = st.progress(0, text="Calcul des plus-values… récupération des prix de marché journaliers")
+    total = len(all_trades)
+
+    for i, (_, t) in enumerate(all_trades.iterrows()):
+        progress.progress(
+            (i + 1) / total,
+            text=f"Transaction {i + 1}/{total} — {t['pair']} {t['type']} ({pd.Timestamp(t['time']).strftime('%d/%m/%Y')})",
+        )
         base, quote = parse_pair(t["pair"])
         ts: datetime = t["time"]
 
@@ -420,9 +459,16 @@ def calc_form_2086(trades: pd.DataFrame, ledgers: pd.DataFrame, year: int) -> pd
                     }
                 )
 
+    progress.empty()
     df = pd.DataFrame(year_rows)
     if not df.empty:
         df["L224 cumul PV"] = df["Plus/Moins-value"].cumsum().round(2)
+    if _price_failures:
+        missing = sorted(_price_failures)
+        lines = "\n".join(f"- **{asset}** le {date}" for asset, date in missing)
+        st.warning(
+            f"⚠️ Prix EUR introuvables pour {len(missing)} entrée(s) — ces transactions sont exclues du calcul L212.\n\n{lines}"
+        )
     return df
 
 
@@ -440,8 +486,15 @@ def calc_staking_income(ledgers: pd.DataFrame, year: int) -> pd.DataFrame:
     if staking.empty:
         return pd.DataFrame()
 
+    _price_failures.clear()
     rows = []
-    for _, row in staking.iterrows():
+    staking_list = list(staking.iterrows())
+    progress = st.progress(0, text="Récupération des prix EUR pour les récompenses de staking…")
+    for i, (_, row) in enumerate(staking_list):
+        progress.progress(
+            (i + 1) / len(staking_list),
+            text=f"Prix EUR pour transaction {i + 1}/{len(staking_list)} ({row['asset']}, {row['time'].strftime('%d/%m/%Y')})…",
+        )
         asset = normalize(row["asset"])
         amount = float(row["amount"])
         if amount <= 0:
@@ -458,7 +511,15 @@ def calc_staking_income(ledgers: pd.DataFrame, year: int) -> pd.DataFrame:
                 "Type": row["type"],
             }
         )
-    return pd.DataFrame(rows)
+    progress.empty()
+    df = pd.DataFrame(rows)
+    if _price_failures:
+        missing = sorted(_price_failures)
+        lines = "\n".join(f"- **{asset}** le {date}" for asset, date in missing)
+        st.warning(
+            f"⚠️ Prix EUR introuvables pour {len(missing)} entrée(s) — valeur EUR affichée comme None.\n\n{lines}"
+        )
+    return df
 
 
 # ---------------------------------------------------------------------------
@@ -524,7 +585,9 @@ def main() -> None:
         return
 
     if not api_key and not api_secret and "trades_df" not in st.session_state:
-        st.info("Entrez vos clés API Kraken dans la barre latérale pour commencer, ou montez un dossier `data/` avec un cache existant.")
+        st.info(
+            "Entrez vos clés API Kraken dans la barre latérale pour commencer, ou montez un dossier `data/` avec un cache existant."
+        )
         return
 
     if fetch_btn or "trades_df" in st.session_state:
