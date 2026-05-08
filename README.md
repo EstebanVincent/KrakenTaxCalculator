@@ -29,8 +29,12 @@ Create a **read-only** API key at https://www.kraken.com/u/security/api with per
 # Build
 docker build -t kraken-tax-calculator .
 
-# Run
-docker run --rm -it -p 8501:8501 --name kraken-tax-calculator-container kraken-tax-calculator
+# Run  (mounts local ./data/ so CSVs persist on your machine)
+docker run --rm -it \
+  -p 8501:8501 \
+  -v "$(pwd)/data:/app/data" \
+  --name kraken-tax-calculator-container \
+  kraken-tax-calculator
 ```
 
 Then open http://localhost:8501
