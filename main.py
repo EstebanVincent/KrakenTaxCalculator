@@ -512,14 +512,20 @@ def main() -> None:
             "[Kraken API Management](https://www.kraken.com/u/security/api)."
         )
 
-    if not api_key or not api_secret:
-        st.info("Entrez vos clés API Kraken dans la barre latérale pour commencer.")
-        return
-
-    # Auto-load from local CSV cache on startup (no API key needed)
+    # Auto-load from local CSV cache on startup — no API key needed
     if "trades_df" not in st.session_state and TRADES_CSV.exists() and not fetch_btn:
         st.session_state["trades_df"] = _load_trades_csv()
-        st.session_state["ledgers_df"] = _load_ledgers_csv() or pd.DataFrame()
+        loaded_ledgers = _load_ledgers_csv()
+        st.session_state["ledgers_df"] = loaded_ledgers if loaded_ledgers is not None else pd.DataFrame()
+
+    # Only block on missing key if there's nothing cached and user wants to fetch
+    if fetch_btn and (not api_key or not api_secret):
+        st.warning("Clé API et secret requis pour charger depuis Kraken.")
+        return
+
+    if not api_key and not api_secret and "trades_df" not in st.session_state:
+        st.info("Entrez vos clés API Kraken dans la barre latérale pour commencer, ou montez un dossier `data/` avec un cache existant.")
+        return
 
     if fetch_btn or "trades_df" in st.session_state:
         if fetch_btn:
