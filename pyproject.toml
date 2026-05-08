@@ -1,0 +1,14 @@
+[project]
+name = "kraken-tax-calculator"
+version = "0.1.0"
+description = "Kraken Tax Calculator - French crypto tax helper for Form 2086 and Form 2042-C-PRO"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "streamlit>=1.28.0",
+    "pandas>=2.0.0",
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = ["python-dotenv>=1.2.1"]
